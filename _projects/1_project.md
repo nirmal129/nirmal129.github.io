@@ -1,81 +1,27 @@
 ---
 layout: page
-title: project 1
-description: with background image
-img: assets/img/12.jpg
+title: Parallel Differentiable Sorting and Ranking with CUDA
+description: A parallel CUDA implementation of the Pool-Adjacent-Violators (PAV) algorithm for differentiable sorting and ranking, achieving 64x–105x speedups for long sequences.
+img: assets/img/PAV.png
 importance: 1
 category: work
-related_publications: true
 ---
 
-Every project has a beautiful feature showcase page.
-It's easy to include images in a flexible 3-column grid format.
-Make your photos 1/3, 2/3, or full width.
+Differentiable sorting and ranking are useful primitives for learning problems involving order statistics, ranking losses, monotonicity constraints, and structured prediction. [Blondel et al.](https://arxiv.org/abs/2002.08871) introduced an exact O(n log n) differentiable sorting and ranking algorithm that improves upon earlier all-pairs or approximate differentiable sorting methods. Their approach reduces differentiable sorting and ranking to isotonic optimization, with the Pool-Adjacent-Violators (PAV) algorithm serving as the main computational primitive.
 
-To give your project a background in the portfolio page, just add the img tag to the front matter like so:
+PAV solves isotonic regression by scanning a sequence, maintaining contiguous monotone blocks, and merging adjacent blocks whenever the monotonicity constraint is violated. While elegant and efficient on a single sequence, the classical PAV algorithm is sequential in nature: each block merge can depend on previous merges, and local violations may propagate backward through the sequence. This dependency structure makes it difficult to fully utilize GPU parallelism, especially for very long sequences or large batched workloads.
 
-    ---
-    layout: page
-    title: project
-    description: a project with a background image
-    img: /assets/img/12.jpg
-    ---
+In this project, I explored a parallel CUDA implementation of PAV for differentiable sorting and ranking, building on the `torchsort` framework. The main idea is to divide the input sequence into *p* chunks, run PAV independently on each chunk to obtain local PAV blocks, and then merge these block summaries through a binary-tree reduction to recover the final global PAV solution. This exposes parallelism across both the sequence and batch dimensions while preserving the exact structure required by the underlying differentiable sorting algorithm.
+
+Empirically, this parallelization yielded substantial speedups in the regimes where sequential PAV becomes the primary bottleneck. The custom CUDA kernels achieved approximately **64x–105x speedups** for sequence lengths of 100K, and around **14x speedup** for batch size 4096, compared to standard open-source sequential GPU implementations. These results suggest that careful algorithmic restructuring—even for seemingly sequential primitives like PAV—can make differentiable sorting and ranking significantly more practical for long-sequence and large-batch settings.
 
 <div class="row">
     <div class="col-sm mt-3 mt-md-0">
-        {% include figure.liquid loading="eager" path="assets/img/1.jpg" title="example image" class="img-fluid rounded z-depth-1" %}
-    </div>
-    <div class="col-sm mt-3 mt-md-0">
-        {% include figure.liquid loading="eager" path="assets/img/3.jpg" title="example image" class="img-fluid rounded z-depth-1" %}
-    </div>
-    <div class="col-sm mt-3 mt-md-0">
-        {% include figure.liquid loading="eager" path="assets/img/5.jpg" title="example image" class="img-fluid rounded z-depth-1" %}
+        {% include figure.liquid loading="eager" path="assets/img/Parallel-Sort-Result.png" title="Speedup results for parallel PAV" class="img-fluid rounded z-depth-1" %}
     </div>
 </div>
 <div class="caption">
-    Caption photos easily. On the left, a road goes through a tunnel. Middle, leaves artistically fall in a hipster photoshoot. Right, in another hipster photoshoot, a lumberjack grasps a handful of pine needles.
-</div>
-<div class="row">
-    <div class="col-sm mt-3 mt-md-0">
-        {% include figure.liquid loading="eager" path="assets/img/5.jpg" title="example image" class="img-fluid rounded z-depth-1" %}
-    </div>
-</div>
-<div class="caption">
-    This image can also have a caption. It's like magic.
+    Empirical speedup results comparing the parallel CUDA PAV implementation against standard sequential GPU baselines across varying sequence lengths and batch sizes.
 </div>
 
-You can also put regular text between your rows of images, even citations {% cite einstein1950meaning %}.
-Say you wanted to write a bit about your project before you posted the rest of the images.
-You describe how you toiled, sweated, _bled_ for your project, and then... you reveal its glory in the next row of images.
-
-<div class="row justify-content-sm-center">
-    <div class="col-sm-8 mt-3 mt-md-0">
-        {% include figure.liquid path="assets/img/6.jpg" title="example image" class="img-fluid rounded z-depth-1" %}
-    </div>
-    <div class="col-sm-4 mt-3 mt-md-0">
-        {% include figure.liquid path="assets/img/11.jpg" title="example image" class="img-fluid rounded z-depth-1" %}
-    </div>
-</div>
-<div class="caption">
-    You can also have artistically styled 2/3 + 1/3 images, like these.
-</div>
-
-The code is simple.
-Just wrap your images with `<div class="col-sm">` and place them inside `<div class="row">` (read more about the <a href="https://getbootstrap.com/docs/4.4/layout/grid/">Bootstrap Grid</a> system).
-To make images responsive, add `img-fluid` class to each; for rounded corners and shadows use `rounded` and `z-depth-1` classes.
-Here's the code for the last row of images above:
-
-{% raw %}
-
-```html
-<div class="row justify-content-sm-center">
-  <div class="col-sm-8 mt-3 mt-md-0">
-    {% include figure.liquid path="assets/img/6.jpg" title="example image" class="img-fluid rounded z-depth-1" %}
-  </div>
-  <div class="col-sm-4 mt-3 mt-md-0">
-    {% include figure.liquid path="assets/img/11.jpg" title="example image" class="img-fluid rounded z-depth-1" %}
-  </div>
-</div>
-```
-
-{% endraw %}
+The code is available at [Parallel-torchsort](https://github.com/nirmal129/Parallel-torchsort). The repository also includes a project report discussing possible future directions, including a ROC convex hull analogy and a saddle-point optimization perspective for further improving the merge step.
