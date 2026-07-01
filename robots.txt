@@ -1,0 +1,4 @@
+User-agent: *
+Disallow:
+
+Sitemap: https://nirmal129.github.io/sitemap.xml
