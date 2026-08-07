@@ -1,5 +1,5 @@
 metadata:
-  last_updated: '2026-07-08'
+  last_updated: '2026-08-07'
 papers:
   5HwEYoYAAAAJ:2osOgNQ5qMEC:
     citations: 0
@@ -11,5 +11,5 @@ papers:
     year: '2026'
   5HwEYoYAAAAJ:u5HHmVD_uO8C:
     citations: 7
-    title: Novel approach to solving Schwarzschild black hole perturbation equations via physics informed neural networks
+    title: 'Novel approach to solving Schwarzschild black hole perturbation equations via physics informed neural networks: N. Patel et al.'
     year: '2024'
